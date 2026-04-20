@@ -1,0 +1,55 @@
+package com.hakanozdemir.config;
+
+import com.hakanozdemir.exception.BaseException;
+import com.hakanozdemir.exception.ErrorMessage;
+import com.hakanozdemir.exception.MessageType;
+import com.hakanozdemir.model.User;
+import com.hakanozdemir.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import java.util.Optional;
+
+@Configuration
+public class AppConfig {
+
+    @Autowired
+    private UserRepository userRepository;
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return new UserDetailsService() {
+
+            @Override
+            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+                Optional<User> user = userRepository.findByUsername(username);
+                if (user.isEmpty()){
+                    throw new BaseException(new ErrorMessage(MessageType.TOKEN_IS_EXPIRED,username));
+                }
+                return user.get();
+            }
+        };
+    }
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService());
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception{
+        return configuration.getAuthenticationManager();
+    }
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+}
