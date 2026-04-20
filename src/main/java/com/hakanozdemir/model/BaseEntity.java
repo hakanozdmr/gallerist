@@ -1,10 +1,11 @@
 package com.hakanozdemir.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
-
+@Data
 @MappedSuperclass
 public class BaseEntity {
     @Id
